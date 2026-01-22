@@ -13,21 +13,21 @@ function bounding_box = bodyBoundingBox(body)
                 % 1 value/ white pixel
                 
                 % update v values
-                if col < min_v || min_v == 0
-                    min_v = col;
+                if col < min_u || min_u == 0
+                    min_u = col;
                 end
 
-                if col > max_v
-                    max_v = col;
+                if col > max_u
+                    max_u = col;
                 end
 
                 % update u values
-                if row < min_u || min_u == 0
-                    min_u = row;
+                if row < min_v || min_v == 0
+                    min_v = row;
                 end
 
-                if row > max_u
-                    max_u = row;
+                if row > max_v
+                    max_v = row;
                 end
             end
         end

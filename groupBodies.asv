@@ -49,6 +49,7 @@ function [gb, num] = groupBodies(bw)
         for col = 2:size(group,2)-1
             if group(row,col) > 0
                 % find the unique body IDs in the surrounding pixels
+             
 
                 for r = -1:1
                     for c = -1:1
@@ -64,17 +65,16 @@ function [gb, num] = groupBodies(bw)
                 
             end
         end
+        end
     end
-    
 
     
-    % get the number of unique numbers within group, ignoring zero
-    unique_ids = unique(group(group > 0)); 
-    
+    % change the values of group where it is equal to 2 to now equal 5
+    group(group == 2) = 5;
 
     % return the grouped bodies and num bodies
     gb = group;
-    num = length(unique_ids); 
+    num = bodyId-1;
 
 end
 

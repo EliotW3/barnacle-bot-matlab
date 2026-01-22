@@ -64,7 +64,7 @@ figure; idisp(bw, 'title', 'Binary Threshold Result');
 %% Build barnacles from touching white pixels
 
 [grouped_bodies, body_total] = groupBodies(bw);
-bodies = buildBodies(grouped_bodies, body_total);
+bodies = buildBodies(grouped_bodies);
 
 
 
@@ -80,7 +80,7 @@ grid on;
 %% plot bounding boxes ontop of image
 
 bw_grouped = grouped_bodies >= 1;
-figure; idisp(bw_grouped, 'title', 'Detected Bodies');
+figure; idisp(img, 'title', 'Detected Bodies');
 hold on;
 
 for i = 1:size(bodies,1)
@@ -88,7 +88,7 @@ for i = 1:size(bodies,1)
     plot_box(bb(1),bb(2),bb(3),bb(4), 'g', 'LineWidth', 1);
     text(bodies(i).Centroid(1), bodies(i).Centroid(2), ...
         sprintf('%d', i), ...
-        'Color', 'y', 'FontSize', 4, 'FontWeight', 'bold');
+        'Color', 'y', 'FontSize', 12, 'FontWeight', 'bold');
 end
 
 hold off;
