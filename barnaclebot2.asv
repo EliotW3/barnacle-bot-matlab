@@ -2,15 +2,12 @@ clear; clc; close all;
 
 %% ALL INPUT DATA
 image_path = "string";
-real_width = 1;
-real_height = 1;
 min_area = 0;
 max_area = 1;
 dilation = 0;
 erosion = 0;
-threshold = 0.53;
 
-output_subdivisions = 6; % divisions along each axis will make a XbyX grid
+
 
 
 %% Load image
@@ -31,9 +28,9 @@ figure; idisp(img_gray, 'title', 'Grayscale Image');
 %% Preprocessing
 
 % smooth for noise reduction
-% Gaussian smoothing 
+% Gaussian smoothing (toolbox-safe)
 g = kgauss(5, 2);        % kernel size 5x5, sigma = 2
-img_smooth = iconvolve(img_gray, 2*g);
+img_smooth = iconvolve(img_gray, g);
 
 %% enhance contrast
 % High-boost filtering for contrast enhancement
@@ -55,8 +52,8 @@ figure;
 ihist(img_enhanced);
 title('Intensity Histogram');
 
-
-bw = img_enhanced > threshold;
+thresh = 0.53; % should be taken from histogram  
+bw = img_enhanced > thresh;
 
 figure; idisp(bw, 'title', 'Binary Threshold Result');
 
