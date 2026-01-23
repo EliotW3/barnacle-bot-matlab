@@ -2,12 +2,15 @@ clear; clc; close all;
 
 %% ALL INPUT DATA
 image_path = "string";
+real_width = 1;
+real_height = 1;
 min_area = 0;
 max_area = 1;
 dilation = 0;
 erosion = 0;
+threshold = 0.53;
 
-
+output_subdivisions = 6; % divisions along each axis will make a XbyX grid
 
 
 %% Load image
@@ -28,9 +31,9 @@ figure; idisp(img_gray, 'title', 'Grayscale Image');
 %% Preprocessing
 
 % smooth for noise reduction
-% Gaussian smoothing (toolbox-safe)
+% Gaussian smoothing 
 g = kgauss(5, 2);        % kernel size 5x5, sigma = 2
-img_smooth = iconvolve(img_gray, g);
+img_smooth = iconvolve(img_gray, 2*g);
 
 %% enhance contrast
 % High-boost filtering for contrast enhancement
@@ -52,8 +55,8 @@ figure;
 ihist(img_enhanced);
 title('Intensity Histogram');
 
-thresh = 0.53; % should be taken from histogram  
-bw = img_enhanced > thresh;
+
+bw = img_enhanced > threshold;
 
 figure; idisp(bw, 'title', 'Binary Threshold Result');
 
@@ -72,7 +75,9 @@ figure; idisp(bw, 'title', 'Eroded Binary Image')
 
 %% Build barnacles from touching white pixels
 
+% get white bodies
 [grouped_bodies, body_total] = groupBodies(bw);
+
 bodies = buildBodies(grouped_bodies);
 
 
@@ -108,20 +113,26 @@ hold off;
 % show every pixel that sits inside a bounding box of a body, and plot
 % bounding boxes ontop
 
-maskInside = uint8(zeros(size(img)));
+maskInside = zeros(size(bw));
 
 for i = 1:size(bodies,1)
     bb = bodies(i).BoundingBox;
     for x = bb(2):1:bb(4)
         for y= bb(1):1:bb(3)
-            maskInside(x,y,1) = 1;
-            maskInside(x,y,2) = 1;
-            maskInside(x,y,3) = 1;
+            % sets the value to i, this will be used for centroid checking
+            % later
+            maskInside(x,y) = bodies(i).ID;
         end
     end
 end
 
-showInside = img.*maskInside;
+% convert from i to 1
+convertedMaskInside = uint8(zeros(size(img)));
+convertedMaskInside(:,:,1) = uint8(logical(maskInside));
+convertedMaskInside(:,:,2) = uint8(logical(maskInside));
+convertedMaskInside(:,:,3) = uint8(logical(maskInside));
+
+showInside = img.*convertedMaskInside;
 
 
 
@@ -147,3 +158,57 @@ showOutside = img.*maskOutside;
 figure; idisp(showOutside, 'title', 'Checked areas Outside Bounding Boxes');
 
 
+%% To find and merge the missing centers of bodies, group the inverted bodies of pixels within the bounding box
+% Then find a body that includes the centroid of the barnacle bounding box
+% - then merge bodies
+
+% invert image
+inverted_bodies = ~bw;
+resultGroups = grouped_bodies;
+
+for i = 1:size(bodies,1)
+    c_u = bodies(i).Centroid(1);
+    c_v = bodies(i).Centroid(2);
+    bbPixels = maskInside(maskInside=bodies(i).ID);
+
+    [invertedGroups, invCount] = groupBodies(bbPixels);
+    
+    if invCount > 0
+
+        % inverted bodies found
+        % build the bodies
+        invertedBodies = buildBodies(invertedGroups);
+
+        % see if centroid sits inside any of the bodies
+        for j = 1:size(invertedBodies,1)
+
+
+            inv_min_u = invertedBodies(j).BoundingBox(1);
+            inv_min_v = invertedBodies(j).BoundingBox(2);
+            inv_max_u = invertedBodies(j).BoundingBox(3);
+            inv_max_v = invertedBodies(j).BoundingBox(4);
+
+            if c_u >= inv_min_u && c_u <= inv_max_u
+                if c_v >= inv_min_v && c_v <= inv_max_v
+                    % centroid lies in body, merge bodies.
+                    resultGroups = mergeBodies(groupedBodies,bodies(i).ID,bbPixels);
+                end
+            end
+        end
+
+    end
+
+end
+
+% by this point, all areas should be updated.
+invResult = ~logical(resultGroups);
+idisp(invResult);
+
+function mergeResult = mergeBodies(grouped,id,to_merge)
+    
+    to_merge = logical(to_merge); % make 1s
+    
+    result = grouped 
+
+
+end

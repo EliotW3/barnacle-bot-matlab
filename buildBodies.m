@@ -15,6 +15,8 @@ function bd = buildBodies(groups)
     Area = [];
     Perimeter = [];
     BoundingBox = [];
+    BoundingBoxArea = [];
+    Diameter = [];
     Centroid = [];
 
     unique_ids = unique(groups(groups > 0));
@@ -33,6 +35,10 @@ function bd = buildBodies(groups)
         boundingBox = bodyBoundingBox(bodyPixels); 
         BoundingBox(end+1,:) = boundingBox;
         
+        % calculate bounding box area
+        BoundingBoxArea(end+1,1) = (boundingBox(3)- boundingBox(1)) * (boundingBox(4) - boundingBox(2)); 
+
+        Diameter(end+1,1) = largestDiameter(bodyPixels);
         
         Centroid(end+1,:) = bbCentroid(boundingBox); % store centroid
 
@@ -44,6 +50,8 @@ function bd = buildBodies(groups)
                'Area', num2cell(Area), ...
                'Perimeter', num2cell(Perimeter), ...
                'BoundingBox', num2cell(BoundingBox,2),...
+               'BoundingBoxArea', num2cell(BoundingBoxArea),...
+               'Diameter', num2cell(Diameter),...
                'Centroid', num2cell(Centroid,2));
 
 

@@ -17,6 +17,10 @@ Built using functions from Peter Corke's Machine Vision Toolbox.
 - Output count and body data
 
 ## TODO
+- Test bounding box area and longest diameter
+- Data verification process
+- Include "holes" for barnacle body grouping to ensure accuracy
+- Data output
 - Conversion via input for meters to pixels, update all output data accordingly
 - Easy to use interface, display charts and allow tweaking of thresholds/min-max areas/etc.
 - Update README with how-to and images
