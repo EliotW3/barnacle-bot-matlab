@@ -1,20 +1,19 @@
 clear; clc; close all;
 
 %% ALL INPUT DATA
-image_path = "string";
-real_width = 1;
-real_height = 1;
-min_area = 0;
-max_area = 1;
-dilation = 0;
-erosion = 0;
+image_path = "barnacles.jpeg";
+real_width = 8; % in centimeters
+min_area = 62;
+max_area = 1000;
+dilation = 1;
+erosion = 1;
 threshold = 0.53;
 
-output_subdivisions = 6; % divisions along each axis will make a XbyX grid
+%output_subdivisions = 6; % divisions along each axis will make a XbyX grid
 
 
 %% Load image
-img = iread("barnacles.jpeg");
+img = iread(image_path);
 figure;
 idisp(img, 'title', 'Input Image');
 
@@ -64,11 +63,11 @@ figure; idisp(bw, 'title', 'Binary Threshold Result');
 
 
 
-bw = imorph(bw, diskSE(1), 'max');
+bw = imorph(bw, diskSE(dilation), 'max');
 
 figure; idisp(bw, 'title', 'Dilated Binary Image')
 
-bw = imorph(bw, diskSE(1), 'min');
+bw = imorph(bw, diskSE(erosion), 'min');
 
 figure; idisp(bw, 'title', 'Eroded Binary Image')
 
@@ -78,7 +77,15 @@ figure; idisp(bw, 'title', 'Eroded Binary Image')
 % get white bodies
 [grouped_bodies, body_total] = groupBodies(bw);
 
-bodies = buildBodies(grouped_bodies);
+% calculate conversion factor for image
+cf_x = real_width / size(bw,2);
+cf_y = real_width / size(bw,1);
+
+% these values should be the same for a square image, but in the event that
+% they are not, take an average
+cf = (cf_x + cf_y) / 2; % cf is number of cm per pixel
+
+bodies = buildBodies(grouped_bodies, min_area, max_area, cf);
 
 
 
@@ -164,6 +171,16 @@ figure; idisp(showOutside, 'title', 'Checked areas Outside Bounding Boxes');
 %% Perform verification on unfound barnacles
 
 %% Output barnacle data and % converage
+barnacle_table = struct2table(bodies);
+
+disp('Barnacle statistics:');
+disp(barnacle_table);
+
+%% save results
+writetable(barnacle_table, 'barnacle_stats.csv');
+
+fprintf('Barnacle statistics saved to barnacle_stats.csv\n');
+
 
 
 %% To find and merge the missing centers of bodies, group the inverted bodies of pixels within the bounding box

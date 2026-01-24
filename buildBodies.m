@@ -1,4 +1,4 @@
-function bd = buildBodies(groups)
+function bd = buildBodies(groups, min_area, max_area, conversion_factor)
     
     % groups will be a X by Y array of values from 1+ 
     % all values greater than 0 represent a white pixel, with values of the
@@ -13,10 +13,13 @@ function bd = buildBodies(groups)
 
     ID = [];
     Area = [];
+    AreaReal = [];
     Perimeter = [];
     BoundingBox = [];
     BoundingBoxArea = [];
+    BoundingBoxAreaReal = [];
     Diameter = [];
+    DiameterReal = [];
     Centroid = [];
 
     unique_ids = unique(groups(groups > 0));
@@ -26,8 +29,9 @@ function bd = buildBodies(groups)
         ID(end+1,1) = unique_ids(i); % store body ID
 
         bodyPixels = groups == unique_ids(i); % logical array for current body
-        Area(end+1,1) = sum(bodyPixels(:)); % count pixels in the body
-        
+        s_b = sum(bodyPixels(:));
+        Area(end+1,1) = s_b; % count pixels in the body
+        AreaReal(end+1,1) = s_b * conversion_factor^2;
 
         Perimeter(end+1,1) = bodyPerimeter(bodyPixels); % count boundary pixels
         
@@ -37,9 +41,12 @@ function bd = buildBodies(groups)
         
         % calculate bounding box area
         BoundingBoxArea(end+1,1) = (boundingBox(3)- boundingBox(1)) * (boundingBox(4) - boundingBox(2)); 
+        BoundingBoxAreaReal(end+1,1) = (boundingBox(3)- boundingBox(1)) * (boundingBox(4) - boundingBox(2)) * conversion_factor^2;
 
-        Diameter(end+1,1) = largestDiameter(bodyPixels);
-        
+        d = largestDiameter(bodyPixels);
+        Diameter(end+1,1) = d;
+        DiameterReal(end+1,1) = d * conversion_factor;
+
         Centroid(end+1,:) = bbCentroid(boundingBox); % store centroid
 
     end
@@ -48,10 +55,13 @@ function bd = buildBodies(groups)
 
     bodies = struct('ID', num2cell(ID), ...
                'Area', num2cell(Area), ...
+               'AreaReal', num2cell(AreaReal), ...
                'Perimeter', num2cell(Perimeter), ...
                'BoundingBox', num2cell(BoundingBox,2),...
                'BoundingBoxArea', num2cell(BoundingBoxArea),...
+               'BoundingBoxAreaReal', num2cell(BoundingBoxAreaReal),...
                'Diameter', num2cell(Diameter),...
+               'DiameterReal', num2cell(DiameterReal),...
                'Centroid', num2cell(Centroid,2));
 
 
@@ -59,14 +69,10 @@ function bd = buildBodies(groups)
 
     
     % Remove bodies where centroid x is equal to bounding box x or centroid y is equal to bounding box y
-    
-    minArea = 62;
-    maxArea = 1000;
-
     % removes any lines (if centroid x = x then must be a line / no height)
     keepCentroid = arrayfun(@(b) b.Centroid(1) ~= b.BoundingBox(1) && b.Centroid(2) ~= b.BoundingBox(2), bodies);
     % filters out based on min max area
-    keepArea = [bodies.Area] >= minArea & [bodies.Area] <= maxArea;
+    keepArea = [bodies.Area] >= min_area & [bodies.Area] <= max_area;
 
     bodies = bodies(keepCentroid & transpose(keepArea));
 

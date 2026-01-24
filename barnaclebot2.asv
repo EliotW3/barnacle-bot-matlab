@@ -1,20 +1,20 @@
 clear; clc; close all;
 
 %% ALL INPUT DATA
-image_path = "string";
-real_width = 1;
-real_height = 1;
-min_area = 0;
-max_area = 1;
-dilation = 0;
-erosion = 0;
+image_path = "barnacles.jpeg";
+real_width = 8; % in centimeters
+real_height = 8; % in centimeters
+min_area = 62;
+max_area = 1000;
+dilation = 1;
+erosion = 1;
 threshold = 0.53;
 
-output_subdivisions = 6; % divisions along each axis will make a XbyX grid
+%output_subdivisions = 6; % divisions along each axis will make a XbyX grid
 
 
 %% Load image
-img = iread("barnacles.jpeg");
+img = iread(image_path);
 figure;
 idisp(img, 'title', 'Input Image');
 
@@ -64,11 +64,11 @@ figure; idisp(bw, 'title', 'Binary Threshold Result');
 
 
 
-bw = imorph(bw, diskSE(1), 'max');
+bw = imorph(bw, diskSE(dilation), 'max');
 
 figure; idisp(bw, 'title', 'Dilated Binary Image')
 
-bw = imorph(bw, diskSE(1), 'min');
+bw = imorph(bw, diskSE(erosion), 'min');
 
 figure; idisp(bw, 'title', 'Eroded Binary Image')
 
@@ -78,7 +78,11 @@ figure; idisp(bw, 'title', 'Eroded Binary Image')
 % get white bodies
 [grouped_bodies, body_total] = groupBodies(bw);
 
-bodies = buildBodies(grouped_bodies);
+% calculate conversion factor for image
+cf_x = size(bw,2) / real_width;
+cf_y = size(bw,1) / real_height;
+
+bodies = buildBodies(grouped_bodies, min_area, max_area, cf);
 
 
 
@@ -158,7 +162,29 @@ showOutside = img.*maskOutside;
 figure; idisp(showOutside, 'title', 'Checked areas Outside Bounding Boxes');
 
 
+%% Perform verification on found barnacles
+% largest to smallest
+
+%% Perform verification on unfound barnacles
+
+%% Output barnacle data and % converage
+barnacle_table = struct2table(bodies);
+
+disp('Barnacle statistics:');
+disp(barnacle_table);
+
+%% save results
+writetable(barnacle_table, 'barnacle_stats.csv');
+
+fprintf('Barnacle statistics saved to barnacle_stats.csv\n');
+
+
+
 %% To find and merge the missing centers of bodies, group the inverted bodies of pixels within the bounding box
+%Currently not in use / not working as intended so commented out
+
+%{
+
 % Then find a body that includes the centroid of the barnacle bounding box
 % - then merge bodies
 
@@ -169,7 +195,7 @@ resultGroups = grouped_bodies;
 for i = 1:size(bodies,1)
     c_u = bodies(i).Centroid(1);
     c_v = bodies(i).Centroid(2);
-    bbPixels = maskInside(maskInside=bodies(i).ID);
+    bbPixels = maskInside(maskInside==bodies(i).ID);
 
     [invertedGroups, invCount] = groupBodies(bbPixels);
     
@@ -191,7 +217,9 @@ for i = 1:size(bodies,1)
             if c_u >= inv_min_u && c_u <= inv_max_u
                 if c_v >= inv_min_v && c_v <= inv_max_v
                     % centroid lies in body, merge bodies.
-                    resultGroups = mergeBodies(groupedBodies,bodies(i).ID,bbPixels);
+
+                    targetPixels = invertedGroups(invertedGroups == j);
+                    resultGroups = mergeByID(groupedBodies,bodies(i).ID,targetPixels);
                 end
             end
         end
@@ -202,13 +230,17 @@ end
 
 % by this point, all areas should be updated.
 invResult = ~logical(resultGroups);
-idisp(invResult);
+figure; idisp(invResult, 'title', 'Checking centroids')
 
-function mergeResult = mergeBodies(grouped,id,to_merge)
-    
-    to_merge = logical(to_merge); % make 1s
-    
-    result = grouped 
-
-
+for i = 1:size(bodies,1)
+    bb = bodies(i).BoundingBox;
+    plot_box(bb(1),bb(2),bb(3),bb(4), 'g', 'LineWidth', 1);
+    text(bodies(i).Centroid(1), bodies(i).Centroid(2), ...
+        sprintf('%d', i), ...
+        'Color', 'y', 'FontSize', 12, 'FontWeight', 'bold');
 end
+
+hold off;
+
+
+%}
