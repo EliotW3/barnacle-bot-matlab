@@ -3,6 +3,7 @@ clear; clc; close all;
 %% ALL INPUT DATA
 image_path = "barnacles.jpeg";
 real_width = 8; % in centimeters
+real_height = 8;
 min_area = 62;
 max_area = 1000;
 dilation = 1;
@@ -79,7 +80,7 @@ figure; idisp(bw, 'title', 'Eroded Binary Image')
 
 % calculate conversion factor for image
 cf_x = real_width / size(bw,2);
-cf_y = real_width / size(bw,1);
+cf_y = real_height / size(bw,1);
 
 % these values should be the same for a square image, but in the event that
 % they are not, take an average

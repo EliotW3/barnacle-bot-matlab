@@ -17,7 +17,6 @@ Built using functions from Peter Corke's Machine Vision Toolbox.
 - Output count and body data
 
 ## TODO
-- Data verification process
 - Include "holes" for barnacle body grouping to ensure accuracy
 - Easy to use interface, display charts and allow tweaking of thresholds/min-max areas/etc.
 - Update README with how-to and images
