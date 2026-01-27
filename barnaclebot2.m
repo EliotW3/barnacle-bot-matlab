@@ -1,16 +1,20 @@
 clear; clc; close all;
 
 %% ALL INPUT DATA
-image_path = "barnacles.jpeg";
+image_path = "left 4.jpg";
+
+[pathstr, name, ext] = fileparts(image_path);
+image_name = name;
+
 real_width = 8; % in centimeters
 real_height = 8;
-min_area = 62;
-max_area = 1000;
+min_area = 30;
+max_area = 3000;
 dilation = 1;
 erosion = 1;
-threshold = 0.53;
+threshold = 0.55;
 
-%output_subdivisions = 6; % divisions along each axis will make a XbyX grid
+output_subdivisions = 8; % divisions along each axis will make a XbyX grid
 
 
 %% Load image
@@ -64,13 +68,13 @@ figure; idisp(bw, 'title', 'Binary Threshold Result');
 
 
 
-bw = imorph(bw, diskSE(dilation), 'max');
+%bw = imorph(bw, diskSE(dilation), 'max');
 
-figure; idisp(bw, 'title', 'Dilated Binary Image')
+%figure; idisp(bw, 'title', 'Dilated Binary Image')
 
-bw = imorph(bw, diskSE(erosion), 'min');
+%bw = imorph(bw, diskSE(erosion), 'min');
 
-figure; idisp(bw, 'title', 'Eroded Binary Image')
+%figure; idisp(bw, 'title', 'Eroded Binary Image')
 
 
 %% Build barnacles from touching white pixels
@@ -163,13 +167,10 @@ hold off;
 maskOutside = uint8(~double(maskInside));
 
 showOutside = img.*maskOutside;
-figure; idisp(showOutside, 'title', 'Checked areas Outside Bounding Boxes');
+figure; 
+idisp(showOutside, 'title', 'Checked areas Outside Bounding Boxes');
+hold on;
 
-
-%% Perform verification on found barnacles
-% largest to smallest
-
-%% Perform verification on unfound barnacles
 
 %% Output barnacle data and % converage
 barnacle_table = struct2table(bodies);
@@ -178,9 +179,8 @@ disp('Barnacle statistics:');
 disp(barnacle_table);
 
 %% save results
-writetable(barnacle_table, 'barnacle_stats.csv');
+writetable(barnacle_table, image_name+'.csv');
 
-fprintf('Barnacle statistics saved to barnacle_stats.csv\n');
 
 
 
