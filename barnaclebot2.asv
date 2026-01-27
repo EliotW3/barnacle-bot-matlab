@@ -2,15 +2,19 @@ clear; clc; close all;
 
 %% ALL INPUT DATA
 image_path = "barnacles.jpeg";
+
+[pathstr, name, ext] = fileparts(image_path);
+image_name = name;
+
 real_width = 8; % in centimeters
-real_height = 8; % in centimeters
-min_area = 62;
-max_area = 1000;
+real_height = 8;
+min_area = 30;
+max_area = 3000;
 dilation = 1;
 erosion = 1;
-threshold = 0.53;
+threshold = 0.55;
 
-%output_subdivisions = 6; % divisions along each axis will make a XbyX grid
+output_subdivisions = 8; % divisions along each axis will make a XbyX grid
 
 
 %% Load image
@@ -62,15 +66,23 @@ figure; idisp(bw, 'title', 'Binary Threshold Result');
 
 %% Morphological cleanup Temporarily dont use this
 
+% Find edges 
+edges = icanny(bw);
+
+% Remove edges from 
 
 
-bw = imorph(bw, diskSE(dilation), 'max');
+% Perform morph operations if inputted
 
-figure; idisp(bw, 'title', 'Dilated Binary Image')
+if dilation 
 
-bw = imorph(bw, diskSE(erosion), 'min');
+%bw = imorph(bw, diskSE(dilation), 'max');
 
-figure; idisp(bw, 'title', 'Eroded Binary Image')
+%figure; idisp(bw, 'title', 'Dilated Binary Image')
+
+%bw = imorph(bw, diskSE(erosion), 'min');
+
+%figure; idisp(bw, 'title', 'Eroded Binary Image')
 
 
 %% Build barnacles from touching white pixels
@@ -79,8 +91,12 @@ figure; idisp(bw, 'title', 'Eroded Binary Image')
 [grouped_bodies, body_total] = groupBodies(bw);
 
 % calculate conversion factor for image
-cf_x = size(bw,2) / real_width;
-cf_y = size(bw,1) / real_height;
+cf_x = real_width / size(bw,2);
+cf_y = real_height / size(bw,1);
+
+% these values should be the same for a square image, but in the event that
+% they are not, take an average
+cf = (cf_x + cf_y) / 2; % cf is number of cm per pixel
 
 bodies = buildBodies(grouped_bodies, min_area, max_area, cf);
 
@@ -159,13 +175,10 @@ hold off;
 maskOutside = uint8(~double(maskInside));
 
 showOutside = img.*maskOutside;
-figure; idisp(showOutside, 'title', 'Checked areas Outside Bounding Boxes');
+figure; 
+idisp(showOutside, 'title', 'Checked areas Outside Bounding Boxes');
+hold on;
 
-
-%% Perform verification on found barnacles
-% largest to smallest
-
-%% Perform verification on unfound barnacles
 
 %% Output barnacle data and % converage
 barnacle_table = struct2table(bodies);
@@ -174,9 +187,8 @@ disp('Barnacle statistics:');
 disp(barnacle_table);
 
 %% save results
-writetable(barnacle_table, 'barnacle_stats.csv');
+writetable(barnacle_table, image_name+'.csv');
 
-fprintf('Barnacle statistics saved to barnacle_stats.csv\n');
 
 
 

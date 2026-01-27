@@ -1,7 +1,7 @@
 clear; clc; close all;
 
 %% ALL INPUT DATA
-image_path = "left 4.jpg";
+image_path = "barnacles.jpeg";
 
 [pathstr, name, ext] = fileparts(image_path);
 image_name = name;
@@ -10,8 +10,8 @@ real_width = 8; % in centimeters
 real_height = 8;
 min_area = 30;
 max_area = 3000;
-dilation = 1;
-erosion = 1;
+dilation = 0;
+erosion = 0;
 threshold = 0.55;
 
 output_subdivisions = 8; % divisions along each axis will make a XbyX grid
@@ -66,15 +66,30 @@ figure; idisp(bw, 'title', 'Binary Threshold Result');
 
 %% Morphological cleanup Temporarily dont use this
 
+% Perform morph operations if inputted
 
 
-%bw = imorph(bw, diskSE(dilation), 'max');
+% Find edges 
+edges = icanny(bw);
 
-%figure; idisp(bw, 'title', 'Dilated Binary Image')
 
-%bw = imorph(bw, diskSE(erosion), 'min');
+% Remove edges from image
+bw = logical(bw - logical(edges));
+figure; idisp(bw, 'title', 'Edges removed')
 
-%figure; idisp(bw, 'title', 'Eroded Binary Image')
+if dilation > 0
+
+    bw = imorph(bw, diskSE(dilation), 'max');
+
+    figure; idisp(bw, 'title', 'Dilated Binary Image')
+
+end
+
+if erosion > 0
+    bw = imorph(bw, diskSE(erosion), 'min');
+
+    figure; idisp(bw, 'title', 'Eroded Binary Image')
+end
 
 
 %% Build barnacles from touching white pixels

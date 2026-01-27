@@ -18,6 +18,10 @@ Built using functions from Peter Corke's Machine Vision Toolbox.
 
 ## TODO
 - Include "holes" for barnacle body grouping to ensure accuracy
+- Use Canny edge detection to build up a mesh of edges, 
+    - simplify to single width
+    - use to enhance seperation detection
+
 - Easy to use interface, display charts and allow tweaking of thresholds/min-max areas/etc.
 - Update README with how-to and images
 - Port to python opencv
