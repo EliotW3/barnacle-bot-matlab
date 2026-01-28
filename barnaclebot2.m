@@ -1,24 +1,25 @@
 clear; clc; close all;
 
 %% ALL INPUT DATA
-image_path = "barnacles.jpeg";
+image_path = "barry_left_2.jpg";
 
 [pathstr, name, ext] = fileparts(image_path);
 image_name = name;
 
 real_width = 8; % in centimeters
 real_height = 8;
-min_area = 30;
-max_area = 3000;
+min_area = 110;
+max_area = 10000;
 dilation = 0;
 erosion = 0;
-threshold = 0.55;
+threshold = 0.53;
 
 output_subdivisions = 8; % divisions along each axis will make a XbyX grid
 
 
 %% Load image
 img = iread(image_path);
+img = imresize(img,0.3);
 figure;
 idisp(img, 'title', 'Input Image');
 
@@ -184,6 +185,10 @@ maskOutside = uint8(~double(maskInside));
 showOutside = img.*maskOutside;
 figure; 
 idisp(showOutside, 'title', 'Checked areas Outside Bounding Boxes');
+
+figure;
+imwrite(showOutside, 'showoutside.jpg');
+zoomImageGrid('showoutside.jpg');
 
 %{
 for i = 1:output_subdivisions

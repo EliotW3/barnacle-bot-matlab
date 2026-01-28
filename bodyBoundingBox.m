@@ -8,7 +8,7 @@ function bounding_box = bodyBoundingBox(body)
     max_v = 0;
 
     for row = 1:size(body,1)
-        for col = 1:size(body,1)
+        for col = 1:size(body,2)
             if body(row,col)
                 % 1 value/ white pixel
                 
