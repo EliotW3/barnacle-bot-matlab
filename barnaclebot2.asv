@@ -10,8 +10,8 @@ real_width = 8; % in centimeters
 real_height = 8;
 min_area = 30;
 max_area = 3000;
-dilation = 1;
-erosion = 1;
+dilation = 0;
+erosion = 0;
 threshold = 0.55;
 
 output_subdivisions = 8; % divisions along each axis will make a XbyX grid
@@ -66,23 +66,30 @@ figure; idisp(bw, 'title', 'Binary Threshold Result');
 
 %% Morphological cleanup Temporarily dont use this
 
+% Perform morph operations if inputted
+
+
 % Find edges 
 edges = icanny(bw);
 
-% Remove edges from 
 
+% Remove edges from image
+bw = logical(bw - logical(edges));
+figure; idisp(bw, 'title', 'Edges removed')
 
-% Perform morph operations if inputted
+if dilation > 0
 
-if dilation 
+    bw = imorph(bw, diskSE(dilation), 'max');
 
-%bw = imorph(bw, diskSE(dilation), 'max');
+    figure; idisp(bw, 'title', 'Dilated Binary Image')
 
-%figure; idisp(bw, 'title', 'Dilated Binary Image')
+end
 
-%bw = imorph(bw, diskSE(erosion), 'min');
+if erosion > 0
+    bw = imorph(bw, diskSE(erosion), 'min');
 
-%figure; idisp(bw, 'title', 'Eroded Binary Image')
+    figure; idisp(bw, 'title', 'Eroded Binary Image')
+end
 
 
 %% Build barnacles from touching white pixels
@@ -167,7 +174,7 @@ for i = 1:size(bodies,1)
 end
 
 hold off;
-    
+   
 
 
 %% show every pixel that sits outside the bounding boxes
@@ -177,10 +184,25 @@ maskOutside = uint8(~double(maskInside));
 showOutside = img.*maskOutside;
 figure; 
 idisp(showOutside, 'title', 'Checked areas Outside Bounding Boxes');
-hold on;
+
+ 
+for i = 1:output_subdivisions
+    for z = 1:outpu
+    z_x = 1+(size(bw,2) / output_subdivisions)*(i-1);
+    z_y = 1+(size(bw,1) / output_subdivisions)*(i-1);
+
+    e_x = size(bw,2) - (size(bw,2)/output_subdivisions) * (output_subdivisions - i);
+    e_y = size(bw,1) - (size(bw,1)/output_subdivisions) * (output_subdivisions - i);
+   
+    idisp(showOutside, 'axis',[z_x e_x z_y e_y]);
+    pause;
+
+end
 
 
-%% Output barnacle data and % converage
+
+
+%% Output barnacle data
 barnacle_table = struct2table(bodies);
 
 disp('Barnacle statistics:');

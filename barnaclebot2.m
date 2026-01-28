@@ -174,7 +174,7 @@ for i = 1:size(bodies,1)
 end
 
 hold off;
-    
+   
 
 
 %% show every pixel that sits outside the bounding boxes
@@ -184,10 +184,25 @@ maskOutside = uint8(~double(maskInside));
 showOutside = img.*maskOutside;
 figure; 
 idisp(showOutside, 'title', 'Checked areas Outside Bounding Boxes');
-hold on;
+
+%{
+for i = 1:output_subdivisions
+    for z = 1:output_subdivisions
+        z_x = 1+(size(bw,2) / output_subdivisions)*(i-1);
+        z_y = 1+(size(bw,1) / output_subdivisions)*(z-1);
+
+        e_x = size(bw,2) - (size(bw,2)/output_subdivisions) * (output_subdivisions - i);
+        e_y = size(bw,1) - (size(bw,1)/output_subdivisions) * (output_subdivisions - z);
+   
+        idisp(showOutside, 'axis',[z_x e_x z_y e_y]);
+        pause;
+    end
+end
+%}
 
 
-%% Output barnacle data and % converage
+
+%% Output barnacle data
 barnacle_table = struct2table(bodies);
 
 disp('Barnacle statistics:');
