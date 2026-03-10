@@ -1,24 +1,25 @@
 clear; clc; close all;
 
 %% ALL INPUT DATA
-image_path = "barnacles.jpeg";
+image_path = "barry_left_2.jpg";
 
 [pathstr, name, ext] = fileparts(image_path);
 image_name = name;
 
 real_width = 8; % in centimeters
 real_height = 8;
-min_area = 30;
-max_area = 3000;
+min_area = 110;
+max_area = 10000;
 dilation = 0;
 erosion = 0;
-threshold = 0.55;
+threshold = 0.53;
 
 output_subdivisions = 8; % divisions along each axis will make a XbyX grid
 
 
 %% Load image
 img = iread(image_path);
+img = imresize(img,0.3);
 figure;
 idisp(img, 'title', 'Input Image');
 
@@ -174,7 +175,7 @@ for i = 1:size(bodies,1)
 end
 
 hold off;
-    
+   
 
 
 %% show every pixel that sits outside the bounding boxes
@@ -184,10 +185,29 @@ maskOutside = uint8(~double(maskInside));
 showOutside = img.*maskOutside;
 figure; 
 idisp(showOutside, 'title', 'Checked areas Outside Bounding Boxes');
-hold on;
+
+figure;
+imwrite(showOutside, 'showoutside.jpg');
+zoomImageGrid('showoutside.jpg');
+
+%{
+for i = 1:output_subdivisions
+    for z = 1:output_subdivisions
+        z_x = 1+(size(bw,2) / output_subdivisions)*(i-1);
+        z_y = 1+(size(bw,1) / output_subdivisions)*(z-1);
+
+        e_x = size(bw,2) - (size(bw,2)/output_subdivisions) * (output_subdivisions - i);
+        e_y = size(bw,1) - (size(bw,1)/output_subdivisions) * (output_subdivisions - z);
+   
+        idisp(showOutside, 'axis',[z_x e_x z_y e_y]);
+        pause;
+    end
+end
+%}
 
 
-%% Output barnacle data and % converage
+
+%% Output barnacle data
 barnacle_table = struct2table(bodies);
 
 disp('Barnacle statistics:');
