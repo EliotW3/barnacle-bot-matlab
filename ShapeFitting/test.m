@@ -1,7 +1,7 @@
 % Shape fitting tests
 clear; close all;
 
-img = imread('filled.jpg');
+img = imread('filled2.jpg');
 imshow(img);
 
 % convert to grayscale if needed
@@ -203,6 +203,60 @@ if ~isempty(x_local_min)
 end
 
 
+
+
+% find local maxima in smooth_dw
+if exist('islocalmax','builtin')
+    locMaxMask = islocalmax(smooth_dw);
+else
+    % simple neighbor comparison for maxima
+    n = numel(smooth_dw);
+    locMaxMask = false(size(smooth_dw));
+    for k = 2:n-1
+        if smooth_dw(k) > smooth_dw(k-1) && smooth_dw(k) > smooth_dw(k+1)
+            locMaxMask(k) = true;
+        end
+    end
+    % endpoints: consider them maxima if greater than their single neighbor
+    if n >= 2
+        if smooth_dw(1) > smooth_dw(2); locMaxMask(1) = true; end
+        if smooth_dw(n) > smooth_dw(n-1); locMaxMask(n) = true; end
+    end
+end
+
+% indices and values of local maxima
+x_local_max = find(locMaxMask);
+y_local_max = smooth_dw(x_local_max);
+
+% If there are at least two maxima, check first and last and remove the smaller one
+if numel(x_local_max) >= 2
+    if y_local_max(1) < y_local_max(end)
+        % remove first
+        x_local_max(1) = [];
+        y_local_max(1) = [];
+    else
+        % remove last
+        x_local_max(end) = [];
+        y_local_max(end) = [];
+    end
+end
+
+% plot maxima on the smooth_dw figure
+if ~isempty(x_local_max)
+    hold on;
+    plot(x_local_max, y_local_max, 'ks', 'MarkerFaceColor','y', 'MarkerSize',8);
+    % annotate indices near markers
+    for kk = 1:numel(x_local_max)
+        text(x_local_max(kk), y_local_max(kk), sprintf(' %d', x_local_max(kk)), ...
+            'VerticalAlignment','bottom','HorizontalAlignment','left','Color','k','FontSize',9);
+    end
+end
+
+
+
+
+
+
 curves = zeros(size(curveWeights,1),1);
 curveId = 1;
 
@@ -269,14 +323,110 @@ imshow(img); hold on;
 scatter(curvePixels(:,2), curvePixels(:,1), 10, segCmap(curves,:), 'filled');
 title('Colored edge pixels over original image');
 
-% add a legend if number of curves is small
-if nCurves <= 20
-    % create legend entries
-    lh = zeros(nCurves,1);
-    for k = 1:nCurves
-        lh(k) = plot(nan,nan,'s','MarkerFaceColor',segCmap(k,:),'MarkerEdgeColor','none');
+%%
+% show the local minima points in red
+for c = 1:size(x_local_max,1)
+    plot(curvePixels(x_local_max(c),2),curvePixels(x_local_max(c),1), 'ro', 'MarkerFaceColor', 'r');
+end
+
+
+%show local minima points in blue
+for c = 1:size(x_local_min,1)
+    plot(curvePixels(x_local_min(c),2),curvePixels(x_local_min(c),1), 'bo', 'MarkerFaceColor', 'b');
+end
+
+t = linspace(0,2*pi,100);
+for i =1:nCurves
+    pts = curvePixels(curves == i, :);
+    ellipse = leastSquareEllipse(pts);
+
+    x_e = ellipse.x0 + ellipse.a * cos(t) * cos(ellipse.theta) - ellipse.b*sin(t)*sin(ellipse.theta);
+    y_e = ellipse.y0 + ellipse.a * cos(t) * sin(ellipse.theta) - ellipse.b*sin(t)*cos(ellipse.theta);
+    
+    plot(x_e,y_e, 'y--', 'LineWidth', 2);
+    plot(ellipse.x0,ellipse.y0,'bx','MarkerSize',5)
+
+end
+
+% mark overlaps between ellipses: check pairwise intersections of their filled masks
+imgSize = size(img);
+t = linspace(0,2*pi,360);
+
+% Create binary masks for each ellipse (filled)
+ellipseMasks = false([imgSize(1), imgSize(2), nCurves]);
+for i = 1:nCurves
+    pts = curvePixels(curves == i, :);
+    if size(pts,1) < 5
+        continue;
     end
-    legend(lh, arrayfun(@(x) sprintf('Curve %d',x), 1:nCurves, 'UniformOutput', false), 'Location','eastoutside');
-    % remove the dummy plots
-    delete(lh);
+    ellipse = leastSquareEllipse(pts);
+    x_e = ellipse.x0 + ellipse.a * cos(t) * cos(ellipse.theta) - ellipse.b.*sin(t)*sin(ellipse.theta);
+    y_e = ellipse.y0 + ellipse.a * cos(t) * sin(ellipse.theta) - ellipse.b.*sin(t)*cos(ellipse.theta);
+    % create polygon and rasterize into mask
+    px = round(x_e(:));
+    py = round(y_e(:));
+    % clamp to image bounds
+    px = min(max(px,1), imgSize(2));
+    py = min(max(py,1), imgSize(1));
+    mask = poly2mask(px, py, imgSize(1), imgSize(2));
+    % fill to ensure interior included
+    ellipseMasks(:,:,i) = mask;
+end
+
+% compute pairwise overlaps and mark their boundary/intersection points
+overlapMask = false(imgSize);
+for i = 1:nCurves-1
+    for j = i+1:nCurves
+        if ~any(ellipseMasks(:,:,i),'all') || ~any(ellipseMasks(:,:,j),'all')
+            continue;
+        end
+        ov = ellipseMasks(:,:,i) & ellipseMasks(:,:,j);
+        if any(ov,'all')
+            % store overlap region
+            overlapMask = overlapMask | ov;
+            % find boundary pixels of the overlap region to mark
+            B = bwperim(ov);
+            [ry, cx] = find(B);
+            hold on;
+            % plot red dots at boundary pixels (convert cols->x, rows->y)
+            plot(cx, ry, '.r', 'MarkerSize', 8);
+        else
+            % if no filled-pixel overlap, check contour intersections of perimeters
+            bi = bwperim(ellipseMasks(:,:,i));
+            bj = bwperim(ellipseMasks(:,:,j));
+            [yi, xi] = find(bi);
+            [yj, xj] = find(bj);
+            if isempty(xi) || isempty(xj)
+                continue;
+            end
+            % convert to polygons and compute intersections via polyshape if available
+            try
+                polyi = polyshape(xi, yi);
+                polyj = polyshape(xj, yj);
+                inter = intersect(polyi, polyj);
+                if ~isempty(inter.Vertices)
+                    v = inter.Vertices;
+                    plot(v(:,1), v(:,2), '.r', 'MarkerSize', 10);
+                    overlapMask = overlapMask | inpolygon(repmat((1:imgSize(2)),imgSize(1),1), repmat((1:imgSize(1))',1,imgSize(2)), v(:,1), v(:,2));
+                end
+            catch
+                % fallback: mark any perimeter pixels that are within 1 pixel distance
+                D = pdist2([xi, yi], [xj, yj]);
+                [ridx, cidx] = find(D <= 1.5);
+                if ~isempty(ridx)
+                    pts = [xi(ridx), yi(ridx)];
+                    plot(pts(:,1), pts(:,2), '.r', 'MarkerSize', 8);
+                    for k = 1:size(pts,1)
+                        overlapMask(pts(k,2), pts(k,1)) = true;
+                    end
+                end
+            end
+        end
+    end
+end
+
+% optionally overlay a semi-transparent red region where overlaps exist
+if any(overlapMask,'all')
+    [oy, ox] = find(overlapMask);
+    scatter(ox, oy, 12, [1 0 0], 'filled', 'MarkerFaceAlpha', 0.4);
 end
