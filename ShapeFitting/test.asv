@@ -203,7 +203,7 @@ if ~isempty(x_local_min)
 end
 
 
-curves = zeros(size(curveWeights,1),1);
+curves = zeros(size(curveWeights,1));
 curveId = 1;
 
 for c = 1:size(x_local_min,1)-1
@@ -215,68 +215,4 @@ for c = 1:size(x_local_min,1)-1
     end
     curveId = curveId + 1;
 
-end
-
-start = x_local_min(end);
-finish = size(curveWeights,1);
-for i = start:finish
-    curves(i) = curveId;
-end
-
-start = 1;
-finish = x_local_min(1);
-for i = start:finish
-    curves(i) = curveId;
-end
-
-
-% create a colormap with as many distinct colors as there are curve ids
-nCurves = max(curves);
-if nCurves < 1
-    error('No curve segments found to color.');
-end
-% use lines colormap for distinct colors, fallback to jet if many
-if nCurves <= 20
-    segCmap = lines(nCurves);
-else
-    segCmap = jet(nCurves);
-end
-
-% build an RGB image for edges (initialize to black)
-edgeRGB = zeros([size(edges), 3]);
-
-% For each pixel in curvePixels assign color based on its curve id.
-% curvePixels rows correspond to traversal order; curves has same length.
-for k = 1:size(curvePixels,1)
-    cid = curves(k);
-    if cid < 1 || cid > nCurves
-        continue;
-    end
-    r = curvePixels(k,1);
-    c = curvePixels(k,2);
-    edgeRGB(r,c,1:3) = reshape(segCmap(cid,:), [1,1,3]);
-end
-
-% display colored edges over a black background
-figure;
-imshow(edgeRGB);
-title('Edges colored by curve segment');
-
-% also overlay colored edge pixels on original image for context
-figure;
-imshow(img); hold on;
-% create scatter with colors mapped from curves (note x=cols, y=rows)
-scatter(curvePixels(:,2), curvePixels(:,1), 10, segCmap(curves,:), 'filled');
-title('Colored edge pixels over original image');
-
-% add a legend if number of curves is small
-if nCurves <= 20
-    % create legend entries
-    lh = zeros(nCurves,1);
-    for k = 1:nCurves
-        lh(k) = plot(nan,nan,'s','MarkerFaceColor',segCmap(k,:),'MarkerEdgeColor','none');
-    end
-    legend(lh, arrayfun(@(x) sprintf('Curve %d',x), 1:nCurves, 'UniformOutput', false), 'Location','eastoutside');
-    % remove the dummy plots
-    delete(lh);
 end
