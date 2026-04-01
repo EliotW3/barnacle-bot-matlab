@@ -9,7 +9,7 @@ This MATLAB code acts as a stepping stone for a more complete and easy to use py
 - [x] Background removal and cleanup of barnacle images
 - [x] Thresholding/morphological operations 
 - - [ ] Controlled by sliders in real time (user friendly)
-- [ ] Identify groups of barnacles touching
+- [x] Identify groups of barnacles touching
 - - [ ] Seperate individual barnacles out from further processing
 - - [ ] Smooth edges of each group, perform shape fitting, and predict barnacles
 - [ ] User friendly output
@@ -50,7 +50,7 @@ Attempts at using watershedding appear innaccurate - hence the focus on shape fi
 ![Inaccurate watershedding attempts](/Images/watershedding.png)
 
 ## 
-### Shape fitting + barnacles
+### Shape fitting of barnacles by eye
 
 Looking at a single group of barnacles, shape fitting by eye can see where barnacles "should" sit in the group.
 
@@ -63,3 +63,6 @@ Predictions made in red.
 Accuracy - 
 
 ![Predictd barnacles shown over the real image](/Images/circled_barnacles_nowhite.png)
+
+## 
+### Shape fitting of barnacles automatically
