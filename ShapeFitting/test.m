@@ -1,7 +1,7 @@
 % Shape fitting tests
 clear; close all;
 
-img = imread('filled2.jpg');
+img = imread('filled.jpg');
 imshow(img);
 
 % convert to grayscale if needed
