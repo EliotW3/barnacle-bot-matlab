@@ -6,12 +6,10 @@ This MATLAB code acts as a stepping stone for a more complete and easy to use py
 
 - [x] Shape fitting for convex curves
 - [ ] Shape fitting for concave curves (likely will require rewriting convex curves)
-- [x] Background removal and cleanup of barnacle images
+- [ ] Background removal and cleanup of barnacle images
 - [ ] Thresholding/morphological operations controlled by sliders in real time (user friendly)
 - [ ] Identify groups of barnacles touching, and seperate them from individual barnacles (circularity?)
-- [ ] Perform shape fitting around barnacle groups to determine how many barnacles are in each group and predict shape
-- [ ] User friendly output
-- [ ] Port to Python
+- [ ] Perform shape fitting around barnacle groups to determine how 
 
 
 ## 
@@ -35,9 +33,4 @@ Each of these ellipses should be identifiable and measurable, despite overlappin
 By eye, we can identify where each "curve" starts and finishes.
 
 ![The outlines of the shape split where each ellipses overlaps](/ShapeFitting/good_example.png)
-
-## 
-### Background / Noise Removal
-Images are converted to greyscale and a gaussian blur is performed and subtracted from the original greyscale image.
-![Background removal result](/Images/Subtracted_Image.png)
 
