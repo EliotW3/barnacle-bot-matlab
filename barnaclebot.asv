@@ -73,10 +73,4 @@ imshow(bw_seperated)
 %}
 
 %%
-% Split into grouped bodies
-
-[grouped_bodies, body_total] = groupBodies(bw_clean);
-
-selected_group = grouped_bodies == 2004;
-figure();
-imshow(selected_group)
+% Split into grou

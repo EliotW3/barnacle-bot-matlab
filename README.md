@@ -7,9 +7,11 @@ This MATLAB code acts as a stepping stone for a more complete and easy to use py
 - [x] Shape fitting for convex curves
 - [ ] Shape fitting for concave curves (likely will require rewriting convex curves)
 - [x] Background removal and cleanup of barnacle images
-- [ ] Thresholding/morphological operations controlled by sliders in real time (user friendly)
-- [ ] Identify groups of barnacles touching, and seperate them from individual barnacles (circularity?)
-- [ ] Perform shape fitting around barnacle groups to determine how many barnacles are in each group and predict shape
+- [x] Thresholding/morphological operations 
+- - [ ] Controlled by sliders in real time (user friendly)
+- [ ] Identify groups of barnacles touching
+- - [ ] Seperate individual barnacles out from further processing
+- - [ ] Smooth edges of each group, perform shape fitting, and predict barnacles
 - [ ] User friendly output
 - [ ] Port to Python
 
@@ -41,3 +43,23 @@ By eye, we can identify where each "curve" starts and finishes.
 Images are converted to greyscale and a gaussian blur is performed and subtracted from the original greyscale image.
 ![Background removal result](/Images/Subtracted_Image.png)
 
+Images with morphological operators applied.
+![Filled in and binarised barnacle images](/Images/Filled_in.png)
+
+Attempts at using watershedding appear innaccurate - hence the focus on shape fitting.
+![Inaccurate watershedding attempts](/Images/watershedding.png)
+
+## 
+### Shape fitting + barnacles
+
+Looking at a single group of barnacles, shape fitting by eye can see where barnacles "should" sit in the group.
+
+![Small section of the barnacles, where all barnacles are touching.](/Images/overlay.png)
+
+Predictions made in red.
+
+![Predicted barnacle locations based on fitting ellipses](/Images/circled_barnacles.png)
+
+Accuracy - 
+
+![Predictd barnacles shown over the real image](/Images/circled_barnacles_nowhite.png)
