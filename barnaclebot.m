@@ -90,96 +90,77 @@ imshow(bw_smooth);
 
 %% any bodies that meet circularity conditions, are a single barnacles and should be highlighted, then removed from this data set
 % Calculate circularity for each body
+
+change_recorded = true;
+barnacles = struct([]);
 stats = regionprops(bw_smooth, 'Area', 'Perimeter','Centroid','PixelList','BoundingBox');
-circularity = [stats.Area] ./ ([stats.Perimeter].^2 / (4 * pi));
-centroids = cat(1,stats.Centroid);
 
-% select stats with circularity 
-mask = circularity > 0.90;
-barnacles = stats(mask);
+while change_recorded
 
-figure();
-imshow(bw_smooth);
-hold on;
-% for each detected barnacle, draw its bounding box and display circularity at centroid
-for k = 1:numel(barnacles)
-    bb = barnacles(k).BoundingBox;    % [x y width height]
-    rectPos = [bb(1), bb(2), bb(3), bb(4)];
-    % draw rectangle
-    rectangle('Position', rectPos, 'EdgeColor', 'g', 'LineWidth', 2);
-    % draw centroid marker
-    c = barnacles(k).Centroid;
-    plot(c(1), c(2), 'r+', 'MarkerSize', 10, 'LineWidth', 1.5);
-    % compute circularity for this region - pull circularity in region
-    % props?
-    A = barnacles(k).Area;
-    P = barnacles(k).Perimeter;
-    if P > 0
-        circ = A / (P^2 / (4*pi));
-    else
-        circ = 0;
-    end
-    % display circularity text at centroid
-    txt = sprintf('%.2f', circ);
-    text(c(1), c(2) - 10, txt, 'Color', 'yellow', 'FontSize', 10, ...
-        'FontWeight', 'bold', 'HorizontalAlignment', 'center', ...
-        'VerticalAlignment', 'bottom', 'BackgroundColor', 'black', 'Margin', 1);
-end
-hold off;
-
-
-%% remainder after removing individual barnacles
-mask = circularity < 0.90;
-remainder = stats(mask);
-
-watershed_result = false(size(bw_clean));
-
-% for each item in remainder - 
-for j = 1:numel(remainder)
-    body = remainder(j);
+    disp("Pass");
+    change_recorded = false;
     
+    circularity = [stats.Area] ./ ([stats.Perimeter].^2 / (4 * pi));
+    centroids = cat(1,stats.Centroid);
     
-    % create body_px from body.PixelList
-    body_px = false(size(bw_clean));
-    for i = 1:numel(body.PixelList)/2
-        body_px(body.PixelList(i,2),body.PixelList(i,1)) = 1;
+    % select stats with circularity 
+    mask = circularity > 0.90;
+    
+    if numel(stats(mask)) > 0
+        change_recorded = true;
     end
 
-    % perform a watershed operation on the body to split it up
-    D = -bwdist(~body_px);          % distance from background
+    barnacles = [barnacles; stats(mask)];
+    
 
 
-    L = watershed(D);  
-    body_separated = body_px;      % create a copy for separation
-    body_separated(L == 0) = 0; % remove watershed ridge lines
+    
 
-    % perform minima imposition to filter out small local minimas
-    mask = imextendedmin(D,2);
-    D2 = imimposemin(D,mask);
-    L2 = watershed(D2);
-    bw3 = body_px;
-    bw3(L2 == 0) = 0;
-    watershed_result = watershed_result + bw3;
 
+    %% remainder after removing individual barnacles
+    mask = circularity < 0.90;
+    remainder = stats(mask);
+    
+    watershed_result = false(size(bw_clean));
+    
+    % for each item in remainder - 
+    for j = 1:numel(remainder)
+        body = remainder(j);
+        
+        
+        % create body_px from body.PixelList
+        body_px = false(size(bw_clean));
+        for i = 1:numel(body.PixelList)/2
+            body_px(body.PixelList(i,2),body.PixelList(i,1)) = 1;
+        end
+    
+        % perform a watershed operation on the body to split it up
+        D = -bwdist(~body_px);          % distance from background
+    
+    
+        L = watershed(D);  
+        body_separated = body_px;      % create a copy for separation
+        body_separated(L == 0) = 0; % remove watershed ridge lines
+    
+        % perform minima imposition to filter out small local minimas
+        mask = imextendedmin(D,2);
+        D2 = imimposemin(D,mask);
+        L2 = watershed(D2);
+        bw3 = body_px;
+        bw3(L2 == 0) = 0;
+        watershed_result = watershed_result + bw3;
+    
+    end
+    
+
+    %figure();
+    %imshow(watershed_result);
+
+
+    CC = bwconncomp(watershed_result, 4);
+    stats = regionprops(CC, 'Area', 'Perimeter','Centroid','PixelList','BoundingBox');
 end
 
-figure();
-imshow(watershed_result);
-
-
-CC = bwconncomp(watershed_result, 4);
-stats2 = regionprops(CC, 'Area', 'Perimeter','Centroid','PixelList','BoundingBox');
-
-
-
-circularity = [stats2.Area] ./ ([stats2.Perimeter].^2 / (4 * pi));
-centroids = cat(1,stats2.Centroid);
-
-% select stats with circularity 
-mask = circularity > 0.90;
-barnacles2 = stats2(mask);
-
-barnacles = [barnacles; barnacles2(:)];
 figure();
 imshow(bw_smooth);
 hold on;

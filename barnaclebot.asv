@@ -90,6 +90,10 @@ imshow(bw_smooth);
 
 %% any bodies that meet circularity conditions, are a single barnacles and should be highlighted, then removed from this data set
 % Calculate circularity for each body
+
+change_recorded = false;
+while change_recorded == false
+
 stats = regionprops(bw_smooth, 'Area', 'Perimeter','Centroid','PixelList','BoundingBox');
 circularity = [stats.Area] ./ ([stats.Perimeter].^2 / (4 * pi));
 centroids = cat(1,stats.Centroid);
@@ -167,8 +171,8 @@ figure();
 imshow(watershed_result);
 
 
-CC = bwconncomp(watershed, 4);
-stats2 = regionprops(watershed_result, 'Area', 'Perimeter','Centroid','PixelList','BoundingBox');
+CC = bwconncomp(watershed_result, 4);
+stats2 = regionprops(CC, 'Area', 'Perimeter','Centroid','PixelList','BoundingBox');
 
 
 

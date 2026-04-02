@@ -79,3 +79,7 @@ Watershedding with minima imposition is performed - first pass
 Circularity can again be performed to remove individual barnacles
 
 ![Individual barnacles identified via watershedding](/Images/watershedding_first_pass.png)
+
+This process is repeated until no more barnacles are seperated and identified by circularity
+
+![Final output of watershedding + circularity method](/Images/final_circ_result.png)
