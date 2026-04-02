@@ -80,3 +80,50 @@ imshow(bw_seperated)
 selected_group = grouped_bodies == 2004;
 figure();
 imshow(selected_group)
+
+%% smooth body 
+
+% Remove extruded pixels by applying morphological operations
+bw_smooth = imopen(selected_group, se);  % Morphological opening to smooth the body
+figure();
+imshow(bw_smooth);
+
+%% any bodies that meet circularity conditions, are a single barnacles and should be highlighted, then removed from this data set
+% Calculate circularity for each body
+stats = regionprops(bw_smooth, 'Area', 'Perimeter','Centroid','PixelList','BoundingBox');
+circularity = [stats.Area] ./ ([stats.Perimeter].^2 / (4 * pi));
+centroids = cat(1,stats.Centroid);
+
+% select stats with circularity > 0.95
+mask = circularity > 0.90;
+barnacles = stats(mask);
+
+figure();
+imshow(bw_smooth);
+hold on;
+% for each detected barnacle, draw its bounding box and display circularity at centroid
+for k = 1:numel(barnacles)
+    bb = barnacles(k).BoundingBox;    % [x y width height]
+    rectPos = [bb(1), bb(2), bb(3), bb(4)];
+    % draw rectangle
+    rectangle('Position', rectPos, 'EdgeColor', 'g', 'LineWidth', 2);
+    % draw centroid marker
+    c = barnacles(k).Centroid;
+    plot(c(1), c(2), 'r+', 'MarkerSize', 10, 'LineWidth', 1.5);
+    % compute circularity for this region - pull circularity in region
+    % props?
+    A = barnacles(k).Area;
+    P = barnacles(k).Perimeter;
+    if P > 0
+        circ = A / (P^2 / (4*pi));
+    else
+        circ = 0;
+    end
+    % display circularity text at centroid
+    txt = sprintf('%.2f', circ);
+    text(c(1), c(2) - 10, txt, 'Color', 'yellow', 'FontSize', 10, ...
+        'FontWeight', 'bold', 'HorizontalAlignment', 'center', ...
+        'VerticalAlignment', 'bottom', 'BackgroundColor', 'black', 'Margin', 1);
+end
+hold off;
+

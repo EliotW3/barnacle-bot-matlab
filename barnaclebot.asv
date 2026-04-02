@@ -73,4 +73,51 @@ imshow(bw_seperated)
 %}
 
 %%
-% Split into grou
+% Split into grouped bodies
+
+[grouped_bodies, body_total] = groupBodies(bw_clean);
+
+selected_group = grouped_bodies == 2004;
+figure();
+imshow(selected_group)
+
+%% smooth body 
+
+% Remove extruded pixels by applying morphological operations
+bw_smooth = imopen(selected_group, se);  % Morphological opening to smooth the body
+figure();
+imshow(bw_smooth);
+
+%% any bodies that meet circularity conditions, are a single barnacles and should be highlighted, then removed from this data set
+% Calculate circularity for each body
+stats = regionprops(bw_smooth, 'Area', 'Perimeter','Centroid','PixelList','BoundingBox');
+circularity = [stats.Area] ./ ([stats.Perimeter].^2 / (4 * pi));
+centroids = cat(1,stats.Centroid);
+
+% select stats with circularity > 0.95
+mask = circularity > 0.95;
+barnacles = stats(mask);
+
+figure();
+
+
+
+% display image to overlay text
+figure();
+imshow(bw_smooth);
+hold on;
+
+% for each region, display circularity at its centroid
+for k = 1:numel(circularity)
+    cval = circularity(k);
+    % format string with 2 decimal places
+    txt = sprintf('%.2f', cval);
+    x = centroids(k,1);
+    y = centroids(k,2);
+    % choose text properties for readability
+    text(x, y, txt, 'Color', 'yellow', 'FontSize', 10, 'FontWeight', 'bold', ...
+        'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', ...
+        'BackgroundColor', 'black', 'Margin', 1);
+end
+
+hold off;

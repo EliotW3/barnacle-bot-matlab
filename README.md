@@ -10,7 +10,7 @@ This MATLAB code acts as a stepping stone for a more complete and easy to use py
 - [x] Thresholding/morphological operations 
 - - [ ] Controlled by sliders in real time (user friendly)
 - [x] Identify groups of barnacles touching
-- - [ ] Seperate individual barnacles out from further processing
+- - [x] Seperate individual barnacles out from further processing
 - - [ ] Smooth edges of each group, perform shape fitting, and predict barnacles
 - [ ] User friendly output
 - [ ] Port to Python
@@ -64,5 +64,11 @@ Accuracy -
 
 ![Predictd barnacles shown over the real image](/Images/circled_barnacles_nowhite.png)
 
+The next step is to perform this shapefitting procedure automatically.
+
 ## 
 ### Shape fitting of barnacles automatically
+
+Grouped bodies are smoothed and individual barnacles are identified by circularity.
+
+![Individual barnacles identified by circularity >0.9](/Images/circularity.png)
