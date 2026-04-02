@@ -46,8 +46,7 @@ Images are converted to greyscale and a gaussian blur is performed and subtracte
 Images with morphological operators applied.
 ![Filled in and binarised barnacle images](/Images/Filled_in.png)
 
-Attempts at using watershedding appear innaccurate - hence the focus on shape fitting.
-![Inaccurate watershedding attempts](/Images/watershedding.png)
+
 
 ## 
 ### Shape fitting of barnacles by eye
@@ -67,8 +66,16 @@ Accuracy -
 The next step is to perform this shapefitting procedure automatically.
 
 ## 
-### Shape fitting of barnacles automatically
+### Shape fitting of barnacles automatically (using watershedding)
 
 Grouped bodies are smoothed and individual barnacles are identified by circularity.
 
 ![Individual barnacles identified by circularity >0.9](/Images/circularity.png)
+
+Watershedding with minima imposition is performed - first pass
+
+![Watershedding result](/Images/watershedding_result.png)
+
+Circularity can again be performed to remove individual barnacles
+
+![Individual barnacles identified via watershedding](/Images/watershedding_first_pass.png)
